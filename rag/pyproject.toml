@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fpga-rag"
+version = "0.1.0"
+description = "RAG local (SQLite + sqlite-vec + FTS5) sur la documentation FPGA Vivado/Vitis"
+readme = "README.fr.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "numpy>=1.24",
+    "sqlite-vec>=0.1.6",
+]
+
+[project.optional-dependencies]
+# modele d'embedding dans le processus (ONNX, CPU), sans serveur
+local = ["fastembed>=0.5"]
+# collecte de la documentation AMD et lecture des fichiers HTML
+amd = ["beautifulsoup4>=4.12", "lxml>=5.0"]
+# lecture des PDF ajoutes avec `add`
+pdf = ["pypdf>=4"]
+all = ["fastembed>=0.5", "beautifulsoup4>=4.12", "lxml>=5.0", "pypdf>=4"]
+test = ["pytest>=8,<10", "beautifulsoup4>=4.12", "lxml>=5.0", "pypdf>=4"]
+
+[project.scripts]
+fpga-rag = "fpga_rag.__main__:main"
+
+[tool.setuptools]
+packages = ["fpga_rag"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

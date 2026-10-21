@@ -1,0 +1,34 @@
+# Environnements et caches : jamais versionnes
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+build/
+
+# Sorties d'outils FPGA : generees, jamais versionnees
+*.xpr
+*.jou
+*.log
+*.bit
+*.dcp
+*.rpt
+.Xil/
+.runs/
+.sim/
+sim_build/
+results.xml
+
+# Donnees locales du RAG. L'index du corpus EST versionne (index/index.db,
+# regle plus bas) ; tout autre fichier de base reste dehors.
+*.db
+*.db-wal
+*.db-shm
+!index/index.db
+
+# Editeurs / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

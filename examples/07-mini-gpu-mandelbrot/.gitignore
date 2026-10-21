@@ -1,0 +1,16 @@
+# artefacts de cet exemple
+sim_build/
+images/
+build/
+__pycache__/
+*.ghw
+*.dcp
+vivado_gui/
+*.str
+clockInfo.txt
+*.backup.jou
+*.backup.log
+images_*/
+tight_setup_hold_pins.txt
+*.wdf
+*.wpc

@@ -1,0 +1,14 @@
+# --- fins de ligne ----------------------------------------------------------
+# Le depot contient des scripts shell (examples/04-*/tb/run_sim.sh,
+# templates/project/scripts/*.sh). Avec core.autocrlf=true et aucun
+# .gitattributes, un clone sous Windows les recoit en CRLF : le shebang devient
+# « #!/usr/bin/env bash\r » et bash echoue sur un fichier introuvable.
+# Les scripts shell gardent donc LF partout.
+*.sh text eol=lf
+
+# Le banc d'evaluation est lu ligne par ligne (une ligne = un objet JSON) :
+# il reste en LF pour que son empreinte soit la meme sur toutes les machines.
+*.jsonl text eol=lf
+
+# L'index est un fichier binaire SQLite : jamais de conversion de fins de ligne.
+index/index.db binary
