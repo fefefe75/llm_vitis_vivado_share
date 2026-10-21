@@ -30,6 +30,8 @@ extraits, citer, et écrire « le corpus ne le dit pas » quand la réponse n'y 
 | `prompts/` | Les prompts système, dont le contrat d'ancrage |
 | `templates/` | Squelettes de projet, de testbench cocotb, de scripts Tcl |
 | `examples/` | Sept exemples complets, du compteur au mini-GPU Mandelbrot en VHDL |
+| `mcp/` | Un serveur MCP qui expose `search_docs` (et les commandes Vivado) à un agent de code |
+| `scripts/` | Vérifications : `verify_all.sh` rejoue l'ensemble, `check_tcl.py` et `verify_vivado.py` contrôlent les scripts Tcl |
 | `index/index.db` | Un index déjà construit sur ce corpus (115 documents, 474 morceaux) |
 | `training/eval/bench.jsonl` | Trente questions de contrôle, pour mesurer la recherche sans LLM |
 

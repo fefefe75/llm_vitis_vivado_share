@@ -1,0 +1,19 @@
+{
+  "_comment": "VS Code / GitHub Copilot: copy into .vscode/mcp.json (or the global file). The server opens over stdio.",
+  "servers": {
+    "vivado-vitis": {
+      "type": "stdio",
+      "command": "/path/to/venv/bin/python",
+      "args": [
+        "-m",
+        "vivado_mcp",
+        "--workspace",
+        "${workspaceFolder}"
+      ],
+      "env": {
+        "PYTHONPATH": "/path/to/LLM_Vivado_Vitis/mcp",
+        "FPGA_MCP_TOOL_ROOT": "/tools/Xilinx"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+# Snippet to add to ~/.hermes/config.yaml (current profile)
+#
+# Verified against the key Hermes actually uses: `mcp_servers` (see the example
+# config shipped with the project: ~/.hermes/config.yaml). A stdio server is
+# declared with command/args/env; `enabled: true` loads it when a session starts.
+mcp_servers:
+  vivado-vitis:
+    command: /path/to/venv/bin/python
+    args:
+      - "-m"
+      - "vivado_mcp"
+      - "--workspace"
+      - "/path/to/your/fpga/project"
+    env:
+      PYTHONPATH: /path/to/LLM_Vivado_Vitis/mcp
+      FPGA_MCP_TOOL_ROOT: /tools/Xilinx
+      FPGA_MCP_TIMEOUT: "3600"
+    enabled: true
