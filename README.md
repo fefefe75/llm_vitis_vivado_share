@@ -62,28 +62,66 @@ partager un index en sachant ce qu'il contient.
 
 ## Mise en route
 
-Il faut Python 3.10 ou plus.
+Il faut Python 3.10 ou plus. Une commande installe tout et construit l'index :
 
 ```bash
-python3 -m venv .venv
-. .venv/bin/activate
-pip install -e "rag[all]"          # numpy, sqlite-vec, fastembed, pypdf, beautifulsoup4
+./scripts/install.sh --workspace ~/mon_projet_fpga
 ```
 
-L'index fourni est utilisable tout de suite, mais seulement en recherche par mots exacts : il a
-été construit avec le serveur d'embeddings de LM Studio (`text-embedding-nomic-embed-text-v1.5`),
-et le garde-fou décrit plus haut empêche de l'interroger avec un autre modèle. Pour la recherche
-hybride complète, on reconstruit l'index avec le modèle embarqué dans le paquet :
+Le script crée `.venv/`, y installe le moteur (`rag/`) et le serveur MCP (`mcp/`),
+télécharge le modèle d'embedding (130 Mo, une seule fois), indexe le corpus, vérifie qu'une
+recherche répond et que le serveur MCP démarre. Il écrit enfin `hermes-mcp.local.yaml`, la
+configuration d'agent avec les chemins de la machine. On peut le relancer sans risque : le venv
+est réutilisé et l'indexation ne recalcule que les fichiers modifiés.
+
+| Option | Effet |
+|---|---|
+| `--workspace DOSSIER` | projet FPGA confié au serveur MCP (défaut : le dossier personnel) |
+| `--rebuild` | supprime l'index avant de le reconstruire, après un changement de modèle par exemple |
+| `--serve` | lance aussi le service OpenAI-compatible en tâche de fond |
+
+L'index construit ainsi vit dans `~/.local/share/fpga-rag/index.db`, hors du dépôt : un
+`git add -A` ne peut pas le ramasser, et `index/index.db` reste celui livré. Ce dernier a été
+construit avec le serveur d'embeddings de LM Studio (`text-embedding-nomic-embed-text-v1.5`) ;
+le garde-fou décrit plus haut empêche de l'interroger avec le modèle embarqué, il ne sert donc
+qu'en recherche par mots exacts tant qu'on ne pointe pas `FPGA_RAG_DB` dessus avec LM Studio.
+
+Sur une machine sans carte graphique, le calcul des vecteurs prend deux à trois minutes. Le
+modèle tourne sur le CPU, dans le processus, via ONNX, et calcule quatre morceaux à la fois.
+Si l'indexation est tuée (`Processus arrêté`, ou `Killed`), c'est la mémoire : l'attention
+coûte le carré de la longueur des morceaux, multiplié par la taille du lot. On relance avec un
+lot plus petit :
 
 ```bash
-export FPGA_RAG_DB="$PWD/index/index.db"
-python -m fpga_rag reset --yes
-python -m fpga_rag index-repo        # télécharge le modèle (130 Mo) une fois, puis indexe
-python -m fpga_rag status
+FPGA_RAG_EMBED_BATCH=1 FPGA_RAG_EMBED_THREADS=2 ./scripts/install.sh
 ```
 
-Sur une machine sans carte graphique, le calcul des vecteurs prend deux à trois minutes pour ces
-474 morceaux. Le modèle tourne sur le CPU, dans le processus, via ONNX.
+Pour faire les étapes à la main, voir [`rag/README.fr.md`](rag/README.fr.md).
+
+## Brancher un agent
+
+La voie recommandée pour un agent comme Hermes, Claude Desktop, Cline ou VS Code est le
+serveur MCP : il expose `search_docs` à côté des outils Vivado, et l'agent l'appelle quand il
+en a besoin. Pour Hermes :
+
+1. copier le bloc de `hermes-mcp.local.yaml` sous `mcp_servers:` dans `~/.hermes/config.yaml` ;
+2. dans une session, taper `/reload-mcp` ;
+3. poser une question précise, « que signifie Synth 8-327 ? » : la réponse doit citer un
+   fichier de `docs/`.
+
+Hermes ne transmet pas l'environnement du shell aux serveurs qu'il lance. Les variables
+`FPGA_RAG_*` doivent donc figurer dans le bloc `env` de la configuration, et c'est ce que le
+script y écrit. Sans elles, `search_docs` cherche un autre index, ou refuse la requête si le
+modèle d'embedding diffère.
+
+Cette voie fonctionne avec n'importe quel modèle de génération, local ou distant, **à
+condition qu'il sache appeler des outils**. La plupart des modèles récents le font. Pour un
+modèle qui ne le sait pas, ou un petit modèle qui oublie de chercher avant de répondre, le
+service `serve` décrit plus bas se charge de la recherche et injecte les extraits avant
+d'appeler le modèle : il suffit de déclarer `http://127.0.0.1:8098/v1` comme fournisseur
+OpenAI-compatible dans le client.
+
+Les autres clients ont leur exemple dans [`mcp/configs/`](mcp/configs/).
 
 ## Interroger l'index
 

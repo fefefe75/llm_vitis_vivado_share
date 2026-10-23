@@ -154,10 +154,12 @@ def test_fastembed_backend_prefixes_and_normalisation(monkeypatch, tmp_path):
     seen: dict = {}
 
     class FakeTextEmbedding:
-        def __init__(self, model_name, cache_dir):
+        def __init__(self, model_name, cache_dir, **kwargs):
             seen["init"] = (model_name, cache_dir)
+            seen["kwargs"] = kwargs
 
         def embed(self, docs, batch_size=16):
+            seen["batch_size"] = batch_size
             seen.setdefault("inputs", []).append(list(docs))
             for d in docs:
                 yield np.full(8, float(len(d)), dtype=np.float32)
@@ -166,10 +168,14 @@ def test_fastembed_backend_prefixes_and_normalisation(monkeypatch, tmp_path):
     monkeypatch.setenv("FPGA_RAG_HOME", str(tmp_path / "h"))
     monkeypatch.setenv("FPGA_RAG_BACKEND", "fastembed")
     monkeypatch.delenv("FPGA_RAG_MODEL", raising=False)
+    monkeypatch.delenv("FPGA_RAG_EMBED_BATCH", raising=False)
+    monkeypatch.delenv("FPGA_RAG_EMBED_THREADS", raising=False)
     from fpga_rag.embedders import make_embedder
 
     emb = make_embedder(Settings.from_env())
     assert seen["init"] == ("nomic-ai/nomic-embed-text-v1.5-Q", str(tmp_path / "h" / "models"))
+    assert seen["kwargs"] == {}
+    assert seen["batch_size"] == 4
     assert (tmp_path / "h" / ".gitignore").exists()
     assert emb.dim == 8
     vecs = emb.embed_documents(["abc"])
@@ -177,6 +183,14 @@ def test_fastembed_backend_prefixes_and_normalisation(monkeypatch, tmp_path):
     assert np.isclose(np.linalg.norm(vecs[0]), 1.0)
     emb.embed_query("q")
     assert seen["inputs"][-1] == ["search_query: q"]
+
+    # the memory knobs reach fastembed
+    monkeypatch.setenv("FPGA_RAG_EMBED_BATCH", "1")
+    monkeypatch.setenv("FPGA_RAG_EMBED_THREADS", "2")
+    emb = make_embedder(Settings.from_env())
+    assert seen["kwargs"] == {"threads": 2}
+    emb.embed_documents(["abc"])
+    assert seen["batch_size"] == 1
 
 
 def test_very_large_k_is_clamped(rag_home, tmp_path):

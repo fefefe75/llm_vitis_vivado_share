@@ -39,6 +39,9 @@ La première indexation télécharge le modèle d'embedding depuis Hugging Face
 (130 Mo, une seule fois, gardé en cache). Sans accès à Hugging Face, passer par
 un serveur local (voir *Modèle d'embedding*).
 
+`../scripts/install.sh` enchaîne ces étapes, l'indexation et les vérifications,
+et prépare la configuration MCP d'un agent. Ce qui suit les détaille.
+
 ## Démarrage rapide
 
 ```bash
@@ -111,6 +114,12 @@ bits) noie la recherche, mieux vaut l'écarter.
 | `FPGA_RAG_BACKEND=openai`, `FPGA_RAG_BASE_URL=http://localhost:1234`, `FPGA_RAG_MODEL=text-embedding-nomic-embed-text-v1.5` | un modèle d'embedding déjà chargé dans LM Studio (ou Ollama : `http://localhost:11434`) |
 | `FPGA_RAG_MODEL=google/embeddinggemma-300m` ou `intfloat/multilingual-e5-large` | multilingue (questions en français), plus lourd (1,2 à 2,2 Go) |
 | `FPGA_RAG_BACKEND=hash` | aucun modèle : purement lexical, pour les tests ou une machine sans rien |
+
+Avec `fastembed`, les morceaux sont calculés par lots de quatre
+(`FPGA_RAG_EMBED_BATCH`), sur tous les cœurs (`FPGA_RAG_EMBED_THREADS`). La mémoire
+consommée croît comme le carré de la longueur d'un morceau, multiplié par le lot :
+si l'indexation est tuée par le système (`Killed`), descendre à
+`FPGA_RAG_EMBED_BATCH=1`. Le résultat ne change pas, seule la durée augmente.
 
 Les préfixes de tâche (`search_query:` / `search_document:` pour nomic,
 `query:` / `passage:` pour e5) sont appliqués automatiquement. **Changer de

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import time
 import urllib.error
@@ -80,11 +81,20 @@ class FastEmbedEmbedder:
         self.name = model
         self.query_prefix = query_prefix
         self.doc_prefix = doc_prefix
-        self._model = TextEmbedding(model_name=model, cache_dir=cache_dir)
+        # The attention cost grows with the square of the sequence length and is
+        # multiplied by the batch: 16 long chunks at once exhaust the RAM of an
+        # 8 to 16 GB machine and the kernel kills the process. Small default,
+        # both knobs overridable (see config.py).
+        self._batch = max(1, int(os.environ.get("FPGA_RAG_EMBED_BATCH") or 4))
+        kwargs = {}
+        threads = os.environ.get("FPGA_RAG_EMBED_THREADS")
+        if threads:
+            kwargs["threads"] = int(threads)
+        self._model = TextEmbedding(model_name=model, cache_dir=cache_dir, **kwargs)
         self.dim = int(self.embed_query("dimension probe").shape[0])
 
     def _run(self, texts: Sequence[str]) -> np.ndarray:
-        return _normalise(np.stack(list(self._model.embed(list(texts), batch_size=16))))
+        return _normalise(np.stack(list(self._model.embed(list(texts), batch_size=self._batch))))
 
     def embed_documents(self, texts: Sequence[str]) -> np.ndarray:
         if not texts:

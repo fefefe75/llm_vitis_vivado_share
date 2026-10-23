@@ -32,3 +32,6 @@ results.xml
 .idea/
 .DS_Store
 Thumbs.db
+
+# Config d'agent generee par scripts/install.sh (chemins de la machine locale)
+*.local.yaml

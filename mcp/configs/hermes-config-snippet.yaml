@@ -1,18 +1,23 @@
 # Snippet to add to ~/.hermes/config.yaml (current profile)
 #
-# Verified against the key Hermes actually uses: `mcp_servers` (see the example
-# config shipped with the project: ~/.hermes/config.yaml). A stdio server is
-# declared with command/args/env; `enabled: true` loads it when a session starts.
+# `scripts/install.sh` writes this block with the real paths of your machine to
+# hermes-mcp.local.yaml at the repository root: prefer copying that file.
+#
+# Hermes does not forward your shell environment to stdio servers: every variable
+# the server needs must be listed under `env`. The FPGA_RAG_* values must be the
+# ones used to build the index, otherwise search_docs finds no index or refuses
+# the query (different embedding model). After editing, run /reload-mcp.
 mcp_servers:
   vivado-vitis:
-    command: /path/to/venv/bin/python
+    command: /path/to/repo/.venv/bin/python
     args:
       - "-m"
       - "vivado_mcp"
       - "--workspace"
       - "/path/to/your/fpga/project"
     env:
-      PYTHONPATH: /path/to/LLM_Vivado_Vitis/mcp
+      FPGA_RAG_HOME: /home/you/.local/share/fpga-rag
+      FPGA_RAG_DB: /home/you/.local/share/fpga-rag/index.db
       FPGA_MCP_TOOL_ROOT: /tools/Xilinx
       FPGA_MCP_TIMEOUT: "3600"
     enabled: true

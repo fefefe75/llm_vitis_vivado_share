@@ -20,6 +20,9 @@ Environment variables:
     FPGA_RAG_QUERY_PREFIX  / FPGA_RAG_DOC_PREFIX
                            task prefixes; guessed from the model name if unset
     FPGA_RAG_USER_AGENT    User-Agent used to download the AMD documentation
+    FPGA_RAG_EMBED_BATCH   chunks embedded at once by fastembed (default: 4);
+                           lower it if indexing is killed for lack of memory
+    FPGA_RAG_EMBED_THREADS ONNX threads used by fastembed (default: all cores)
 """
 
 from __future__ import annotations
